@@ -60,14 +60,13 @@ require_cmd() {
 list_skills() {
   info "Fetching available skills from ${REPO}..."
   local response
-  response=$(curl -fsSL "${BASE_URL}?ref=${BRANCH}" 2>/dev/null) \
+  response=$(curl -fsSL "${BASE_URL}/.claude/skills?ref=${BRANCH}" 2>/dev/null) \
     || fail "Failed to fetch repo contents. Check your network connection."
 
   local skills
   skills=$(echo "$response" \
     | grep '"name"' \
     | sed 's/.*"name": *"\([^"]*\)".*/\1/' \
-    | grep -v -E '^\.|^install\.sh$|^README|^LICENSE' \
   )
 
   if [ -z "$skills" ]; then
@@ -152,7 +151,7 @@ fi
 
 # ─── Verify skill exists in repo ────────────────────────────────────────────
 info "Checking if '${SKILL}' exists in ${REPO}..."
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/${SKILL}?ref=${BRANCH}")
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/.claude/skills/${SKILL}?ref=${BRANCH}")
 if [ "$HTTP_CODE" != "200" ]; then
   fail "Skill '${SKILL}' not found in ${REPO}. Run with --list to see available skills."
 fi
@@ -160,7 +159,7 @@ fi
 # ─── Download ────────────────────────────────────────────────────────────────
 info "Installing skill '${SKILL}' into ${INSTALL_DIR}..."
 mkdir -p "$INSTALL_DIR"
-download_dir "$SKILL" "$INSTALL_DIR"
+download_dir ".claude/skills/${SKILL}" "$INSTALL_DIR"
 
 # ─── Make scripts executable ────────────────────────────────────────────────
 find "$INSTALL_DIR" -name "*.sh" -exec chmod +x {} \;
